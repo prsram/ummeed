@@ -1,0 +1,17 @@
+189805001764
+
+
+curl -H "Content-Type: application/json" -X POST http://127.0.0.1:3000/api/eth/borrower -d "{\"p_address\":\"0x2e66F79ca1d054213Fc1E6612Bf9941A993771fe\",\"type\":\"True\",\"fName\":\"Mike\",\"lName\":\"Jackson\",\"Aadhar\":\"2089454561\",\"UID\":\"U1978\"}"
+
+curl -H "Content-Type: application/json" -X POST http://127.0.0.1:3000/api/eth/lender -d "{\"p_address\":\"0xbE6578BE8A610Af716b135ff3c6F4a984625C382\",\"fName\":\"John\",\"lName\":\"Doe\",\"Aadhar\":\"5512635530\",\"UID\":\"U2589\"}"
+
+curl -H "Content-Type: application/json" -X POST http://127.0.0.1:3000/api/borrower/borrower -d "{\"borrower_type\":\"MFI\",\"first_name\":\"John\",\"last_name\":\"Yack\",\"govt_id\":\"895621452\",\"address\":\"Chennai\",\"phone_number\":\"5052589632\",\"pin_code\":\"456123\",\"user_id\":\"12345\",\"dob\":\"04/26/2017\",\"gender\":\"M\",\"shg_affliation\":\"Yes\",\"affiliated_shg_name\":\"NA\"}"
+
+curl -H "Content-Type: application/json" -X POST http://127.0.0.1:3000/api/lender/lender -d "{\"user_id\":\"201726\",\"first_name\":\"Joe\",\"last_name\":\"Triben\",\"adhar_id\":\"987465654\",\"address\":\"Chennai\",\"phone_number\":\"2018952954\",\"pin_code\":\"456889\",\"dob\":\"04/26/1990\"}"
+
+curl -H "Content-Type: application/json" -X POST http://127.0.0.1:3000/api/eth/loan -d "{\"loan_amt\":5000}"
+
+0xB1817820B37B3c28C0Fbc426248fe97e49D1087F
+
+
+0x542c533D764D6A7A60330eDbD45e7b93B1Ae99f4
