@@ -45,7 +45,7 @@ router.route('/borrower').post(function (req, res) {
         phone_number: req.body.phone_number,
         pin_code: req.body.pin_code,
         user_id: req.body.user_id,
-        date_of_birth: req.body.dob,
+        date_of_birth: req.body.date_of_birth,
         gender: req.body.gender,
         shg_affliation: req.body.shg_affliation,
         affiliated_shg_name: req.body.affiliated_shg_name
@@ -65,7 +65,7 @@ router.route('/borrower').post(function (req, res) {
                         "','" + borrower.pin_code + "','" + borrower.user_id + "','" + borrower.date_of_birth +
                         "','" + borrower.gender + "','" + borrower.shg_affliation + "','" + borrower.affiliated_shg_name +"')"
     
-      
+      console.log("borrower:"+borrower_ins_query);
       dbConn.execute({
         sqlText:  borrower_ins_query,
         complete: function(err, stmt, rows) {
