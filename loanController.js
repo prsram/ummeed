@@ -9,7 +9,12 @@ var loans = function() {
     router.route('/applications/:id').get(function(req,res) {
 
         let lender_id = req.params.id;
-        query = "select * from ummeed.public.application where lender_id = " + lender_id
+        query = "select borr.first_name || ' ' || borr.last_name as Borrower_Name, " +
+                " borr.type_of_borrower, borr.govt_id, borr.address, borr.phone_number, " +
+                " borr.pin_code, borr.Date_of_Birth, borr.Gender, borr.shg_affiliation, "+
+                " borr.affiliated_shg_name, app.* from ummeed.public.application app " +
+                " inner join ummeed.public.borrower borr on app.borrower_id = borr.borrower_id "+
+                " where app.lender_id = " + lender_id
         dbConn.execute({
             sqlText:  query,
             complete: function(err, stmt, rows) {
@@ -118,6 +123,11 @@ router.route('/process').post(function (req,res){
                                                     loan_bal, loan_id, emi_amt );
 
                     console.log(" Public address updated successfully !");    
+                    facility_ins_query =  "insert into ummeed.public.facility LENDER_ID," + 	
+                                    "BORROWER_ID, LOAN_AMOUNT, INTEREST_RATE, LOAN_STATUS, " +
+                                    "NUMBER_OF_EMI, EMI_TO_BE_PAID, EMI_PAID, LOAN_BALANCE, "+
+                                    "MATURITY_DATE, LOAN_ID, EMI_AMOUNT ) "+
+                                    " values (   )"
                     return res.send({ rows, message: 'Loan registration has been created successfully.' });
                                         
                 }
