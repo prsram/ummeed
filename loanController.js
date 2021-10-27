@@ -13,8 +13,8 @@ var loans = function() {
                 " borr.type_of_borrower, borr.govt_id, borr.address, borr.phone_number, " +
                 " borr.pin_code, borr.Date_of_Birth, borr.Gender, borr.shg_affiliation, "+
                 " borr.affiliated_shg_name, app.* from ummeed.public.application app " +
-                " inner join ummeed.public.borrower borr on app.borrower_id = borr.borrower_id "+
-                " where app.lender_id = " + lender_id
+                " inner join ummeed.public.borrower borr on app.borrower_id = borr.user_id"+
+                " where app.application_status = 'Pending' and app.lender_id = " + lender_id
         dbConn.execute({
             sqlText:  query,
             complete: function(err, stmt, rows) {
@@ -78,33 +78,69 @@ router.route('/apply').post(function (req,res){
         });
 
     });
+router.route('/activeloans/:id').get(function (req,res){
 
+    let borrower_id = req.params.id;
+    query = "select rl.first_name  || ' ' || rl.last_name as \"Lender_Name\", fl.* " +
+            " from ummeed.public.facility fl inner join ummeed.public.retail_lender rl " +
+            " on fl.lender_id = rl.user_id where fl.borrower_id =" + borrower_id ;
+    dbConn.execute({
+        sqlText:  query,
+        complete: function(err, stmt, rows) {
+
+            if(err) {
+                console.error('Failed to execute statement due to the following error: ' + err.message);
+            } else {
+                console.log(stmt.getSqlText());
+                return res.send({ rows });
+            }
+        }
+    });
+
+
+});
 router.route('/process').post(function (req,res){
     
+    console.log(req.body);
     var app_id = req.body.app_id;
     var status = req.body.status;
+    var lender_type = req.body.lender_type;
 
+    console.log(lender_type);
+    var app_retrieve_query ="";
     if (status == "Approved"){
-        app_retrieve_query = "select app.borrower_id, br.pub_add as Borr_add, rl.user_id, rl.pub_add as lend_add," +
+        
+        if (lender_type == "MF Credit Provider") {
+            console.log('Inside MF Credit Provider');
+            app_retrieve_query = "select app.borrower_id, mfi.user_id, app.amount, app.interest_rate" +
+                            " from ummeed.public.application app inner join "+
+                            " ummeed.public.borrower br on app.borrower_id = br.user_id " +
+                            " inner join ummeed.public.mfi mfi on app.lender_id = mfi.user_id "+ 
+                            " where app.app_id = " + app_id; 
+
+        } else if (lender_type == "Retail Lender") {
+            console.log('Inside Retail Lender');
+            app_retrieve_query = "select app.borrower_id, br.pub_add as Borr_add, rl.user_id, rl.pub_add as lend_add," +
                             " app.amount, app.interest_rate from ummeed.public.application app inner join "+
                             " ummeed.public.borrower br on app.borrower_id = br.user_id " +
                             " inner join ummeed.public.retail_lender rl on app.lender_id = rl.user_id "+ 
                             " where app.app_id = " + app_id; 
+        }
+        
         console.log(app_retrieve_query);
         dbConn.execute({
             sqlText:  app_retrieve_query,
             complete: function(err, stmt, rows) {
                 if(err) {
                     console.error('Failed to execute statement due to the following error: ' + err.message);
-                } else {
-                    console.log(rows[0]);
+                } else {                    
                     var borr_address    = rows[0].BORR_ADD;
                     var borr_id         = rows[0].BORROWER_ID;
                     var lender_address  = rows[0].LEND_ADD;
                     var lender_id       = rows[0].USER_ID;
                     var loan_amount     = rows[0].AMOUNT;
                     var interest        = rows[0].INTEREST_RATE;
-                    var tenure          = 1 
+                    var tenure          = 5 
                     var no_of_emi       = tenure * 12;
                     var total_amt = Math.floor((loan_amount * (100 + interest)) /100);
                     var emi_amt = Math.floor(total_amt / no_of_emi);      
@@ -117,19 +153,59 @@ router.route('/process').post(function (req,res){
                     console.log(borr_address);
                     console.log(lender_address);
                     loan_id = borr_id + "0" + lender_id;
-
-                    ethController.register_loan(borr_address, lender_address, interest, loan_amount,
+                    
+                    if (lender_type == "Retail Lender") {
+                        ethController.register_loan(borr_address, lender_address, interest, loan_amount,
                                                     status, no_of_emi, tenure, emi_left,  emi_paid,
                                                     loan_bal, loan_id, emi_amt );
+                    }
 
-                    console.log(" Public address updated successfully !");    
-                    facility_ins_query =  "insert into ummeed.public.facility LENDER_ID," + 	
+                    
+                    facility_ins_query =  "insert into ummeed.public.facility (LENDER_ID," + 	
                                     "BORROWER_ID, LOAN_AMOUNT, INTEREST_RATE, LOAN_STATUS, " +
                                     "NUMBER_OF_EMI, EMI_TO_BE_PAID, EMI_PAID, LOAN_BALANCE, "+
-                                    "MATURITY_DATE, LOAN_ID, EMI_AMOUNT ) "+
-                                    " values (   )"
-                    return res.send({ rows, message: 'Loan registration has been created successfully.' });
+                                    "LOAN_ID, EMI_AMOUNT ) "+
+                                    " values ( " + lender_id + "," + borr_id + ",'" + loan_amount +
+                                    "','" + interest + "', 'Approved', '" + no_of_emi + 
+                                    "','" + emi_amt + "','" + emi_paid + "','" + loan_bal + 
+                                    "','" + loan_id + "','" + emi_amt + "')"
+                    console.log(facility_ins_query);
+                    dbConn.execute({
+                        sqlText:  facility_ins_query,
+                        complete: function(err, stmt, rows) {
+                            if(err) {
+                                console.error('Failed to execute statement due to the following error: ' + err.message);
+                            } else {
+                                dbConn.execute({
+                                    sqlText:  "update ummeed.public.application set application_status = '" + status + "' Where app_id = " + app_id,
+                                    complete: function(err, stmt, rows) {
+                                        if(err) {
+                                            console.error('Failed to update application table due to the following error: ' + err.message);
+                                        } else {
+                                            console.log(stmt.getSqlText());
+                                            return res.send({ rows, message: 'Loan registration has been created successfully.' });           
+                                        }
+                                    }
+                                });
+                                console.log(stmt.getSqlText());                                
+                            }
+                        }
+                    });
+            
+                    
                                         
+                }
+            }
+        });
+    }else if (status == "Rejected") {
+        dbConn.execute({
+            sqlText:  "update ummeed.public.application set application_status = '" + status + "' Where app_id = " + app_id,
+            complete: function(err, stmt, rows) {
+                if(err) {
+                    console.error('Failed to update application table due to the following error: ' + err.message);
+                } else {
+                    console.log(stmt.getSqlText());
+                    return res.send({ rows });                
                 }
             }
         });
