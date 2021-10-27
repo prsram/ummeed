@@ -386,7 +386,14 @@ var eth = {
               int_rate, status, no_of_emi, tenure, emi_left, emi_paid, loan_bal,
             loan_id, emi_amt ).send({ from: borr_addr, gas: 3000000 });;
           
-    }
+    },
+    
+    repay_loan: function(borr_addr, lend_addr, loan_amt) {
+
+      var result = myContract.methods.repayLoanoneEMI(borr_addr, lend_addr, 
+                  loan_amt ).send({ from: borr_addr, gas: 3000000 });;
+
+}
   };
    /* });
     router.post('/lender',async (req,res)=>{   

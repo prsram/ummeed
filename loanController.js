@@ -96,8 +96,39 @@ router.route('/activeloans/:id').get(function (req,res){
             }
         }
     });
+});
 
+router.route('/repayemi/:id').get(function (req,res){
 
+    let loan_id = req.params.id;
+    
+    
+    query = "select rl.pub_add as \"lender_address\" , br.pub_add as \"borr_address\",fl.* " +
+    " from ummeed.public.facility fl " +
+    " inner join ummeed.public.retail_lender rl on fl.lender_id = rl.user_id " +
+    " inner join ummeed.public.borrower br on fl.borrower_id = br.user_id " +
+    " where fl.loan_id = " + loan_id
+    
+    dbConn.execute({
+        sqlText:  query,
+        complete: function(err, stmt, rows) {
+
+            if(err) {
+                console.error('Failed to execute statement due to the following error: ' + err.message);
+            } else {
+                var borr_address    = rows[0].borr_address;
+                var lender_address  = rows[0].lender_address;              
+                var loan_amount     = rows[0].LOAN_AMOUNT;
+                var emi        = rows[0].EMI_AMOUNT;
+
+                loan_bal = loan_amount - emi;
+
+                ethController.repay_loan(borr_address, lender_address,loan_bal);
+
+                return res.send({ msg: "Loan balance updated in ethereum" });
+            }
+        }
+    });
 });
 router.route('/process').post(function (req,res){
     
