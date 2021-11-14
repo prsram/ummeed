@@ -314,8 +314,8 @@ var myContract = new web3.eth.Contract([
     "stateMutability": "view",
     "type": "function"
   }
-], '0x542c533D764D6A7A60330eDbD45e7b93B1Ae99f4', {
-    from: '0x2e66F79ca1d054213Fc1E6612Bf9941A993771fe', // default from address
+], '0x2F91133Bb5f3404F265380E8657a32b788EdA3E8', {
+    from: '0xa4F690396599c8Eb19c57EC97Cc39941f098a56a', // default from address
     gasPrice: '20000000000'
 
 });

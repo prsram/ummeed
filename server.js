@@ -12,11 +12,13 @@ app.use(cors());
 var borrowController = require('./borrowerController')();
 var lenderController = require('./lenderController')();
 var loanController = require('./loanController')();
+var securityController = require('./securityController')();
 
 //app.use("/api/eth", ethController);
 app.use("/api/borrower", borrowController);
 app.use("/api/lender", lenderController);
 app.use("/api/loan", loanController);
+app.use("/api/securities", securityController);
 
 
 app.listen(3000, function(){

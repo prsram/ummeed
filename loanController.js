@@ -183,8 +183,8 @@ router.route('/process').post(function (req,res){
                     console.log(emi_left);
                     console.log(borr_address);
                     console.log(lender_address);
-                    loan_id = borr_id + "0" + lender_id;
-                    
+                    loan_id =  "LX-" + Math.floor(Math.random() * 1000);
+                                        
                     if (lender_type == "Retail Lender") {
                         ethController.register_loan(borr_address, lender_address, interest, loan_amount,
                                                     status, no_of_emi, tenure, emi_left,  emi_paid,
