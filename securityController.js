@@ -68,6 +68,8 @@ var securities = function() {
                 }
             });
         }
+        console.log("Securitization has been completed successfully!");
+        return res.send({ msg : "Securitization has been completed successfully!" });
        
     });
 
@@ -123,6 +125,7 @@ var securities = function() {
             sec_count = sec_count - 1;
 
         }
+        return res.send({ msg : "Securities purchase has been completed successfully!" });
     });
 
     return router;
