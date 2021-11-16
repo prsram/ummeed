@@ -8,7 +8,7 @@ var securities = function() {
     router.route('/approvedloans/').get(function(req,res) {
 
         
-        query = "SELECT MFI.NAME AS MFI_NAME, MFI.ADDRESS AS MFI_ADDRESS, BRR.FIRST_NAME || BRR.LAST_NAME " +
+        query = "SELECT MFI.NAME AS MFI_NAME, MFI.ADDRESS AS MFI_ADDRESS, BRR.FIRST_NAME || ' ' || BRR.LAST_NAME " +
                 " AS BORROWER_NAME, BRR.ADDRESS AS BORROWER_ADDRESS, FL.LOAN_AMOUNT, FL.INTEREST_RATE," + 
                 " FL.NUMBER_OF_EMI - FL.EMI_PAID AS BALANCE_EMI, FL.LOAN_ID FROM UMMEED.PUBLIC.FACILITY FL" +
                 " INNER JOIN UMMEED.PUBLIC.MFI MFI  ON FL.LENDER_ID = MFI.USER_ID " +
@@ -34,18 +34,13 @@ var securities = function() {
     router.route('/security').post(function(req,res){
 
         var owner_id = req.body.mfi_lender;
-        var block_or_amt = req.body.is_block;
         var block_amount = req.body.block_amount;
         var loan_amount = req.body.loan_amount;
         var loan_id = req.body.loan_id;
         console.log(block_amount);
         console.log(block_or_amt);
-        if (block_or_amt == "1") {
-            no_of_blocks = block_amount;
-            block_amount = loan_amount / no_of_blocks;
-        }
-        else
-            no_of_blocks = loan_amount / block_amount;
+        
+        no_of_blocks = loan_amount / block_amount;
             
         console.log(req.body);
         console.log(no_of_blocks);
@@ -75,10 +70,15 @@ var securities = function() {
 
     router.route('/currentSecurities/').get(function(req,res) {
         
-        query = "select fl.loan_id, fl.loan_amount, fl.interest_rate, max(amount) as security_amount, " +
-        " count(security_id) as avl_sec_count from ummeed.public.facility fl " +
-        " inner join ummeed.public.security sec on fl.loan_id = sec.loan_id " +
-        " where sec.retail_lender_id is null group by fl.loan_id, fl.loan_amount, fl.interest_rate;"
+        query = "SELECT FL.LOAN_ID, FL.LOAN_AMOUNT, MFI.NAME AS MFI_LENDER, MFI.ADDRESS AS MFI_LOCATION, " +
+        "BRR.FIRST_NAME || ' ' || BRR.LAST_NAME AS BORROWER_NAME, BRR.ADDRESS AS BORROWER_ADDRESS, "+
+        "FL.INTEREST_RATE,FL.NUMBER_OF_EMI, MAX(AMOUNT) AS SECURITY_AMOUNT, COUNT(SECURITY_ID) AS AVL_SEC_COUNT " +
+        "FROM UMMEED.PUBLIC.FACILITY FL INNER JOIN UMMEED.PUBLIC.SECURITY SEC ON FL.LOAN_ID = SEC.LOAN_ID " +
+        "INNER JOIN UMMEED.PUBLIC.BORROWER BRR ON FL.BORROWER_ID = BRR.USER_ID " +
+        "INNER JOIN UMMEED.PUBLIC.MFI MFI ON FL.LENDER_ID = MFI.USER_ID " +
+        "WHERE SEC.RETAIL_LENDER_ID IS NULL " +
+        "GROUP BY FL.LOAN_ID, FL.LOAN_AMOUNT, FL.INTEREST_RATE, FL.NUMBER_OF_EMI, " +
+        "MFI.NAME, MFI.ADDRESS, BRR.FIRST_NAME || ' ' || BRR.LAST_NAME, BRR.ADDRESS "
                 
         dbConn.execute({
             sqlText:  query,
